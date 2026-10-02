@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  paddy-doctor-api:
+    build:
+      context: ./paddy_disease_detection
+      dockerfile: Dockerfile
+    container_name: paddy_doctor_backend
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1

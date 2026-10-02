@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# Large Datasets & Raw Images (Keep repo lightweight)
+data/
+dataset/
+paddy_disease_detection/data/
+
+# Giant Model Weights (>100MB rejected by GitHub)
+*.pth
+*.pt
+!paddy_disease_detection/checkpoints/best_efficientnet_b0.pth
+
+# Binaries & Tunnels
+cloudflared.exe
+paddy_disease_detector/
+
+# Flutter / Dart Build outputs
+flutter_app/.dart_tool/
+flutter_app/build/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.packages
+.idea/
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db

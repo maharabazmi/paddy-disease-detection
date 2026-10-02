@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Paddy Doctor AI - Disease & Severity Quantification</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0F4C3A">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0F4C3A;
+      --primary-dark: #0A3327;
+      --primary-light: #166B52;
+      --accent: #10B981;
+      --accent-soft: #D1FAE5;
+      --bg: #F4F7F5;
+      --surface: #FFFFFF;
+      --text-main: #1F2937;
+      --text-muted: #6B7280;
+      --border: #E5E7EB;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 40px;
+    }
+
+    /* Top App Header */
+    .app-header {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      color: white;
+      padding: 24px 20px 20px 20px;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      font-size: 28px;
+      background: rgba(255, 255, 255, 0.15);
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+
+    .brand-text h1 {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      opacity: 0.85;
+      font-weight: 500;
+    }
+
+    .server-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #A7F3D0;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #34D399;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #34D399;
+    }
+
+    /* Main Container */
+    .container {
+      width: 100%;
+      max-width: 600px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Capture / Upload Card */
+    .action-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .action-card h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--primary);
+    }
+
+    .action-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 10px rgba(15, 76, 58, 0.25);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: #E8F5E9;
+      color: var(--primary);
+      border: 1px solid #C8E6C9;
+    }
+
+    .btn-secondary:active {
+      transform: scale(0.98);
+      background: #C8E6C9;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    /* Loading Overlay */
+    .loading-state {
+      display: none;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 30px 20px;
+      text-align: center;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid var(--accent-soft);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .loading-subtext {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Results Section */
+    .results-container {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Diagnosis Banner Card */
+    .diagnosis-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border-left: 6px solid var(--primary);
+      border: 1px solid var(--border);
+      border-left-width: 6px;
+    }
+
+    .diagnosis-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .disease-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary-dark);
+      line-height: 1.3;
+    }
+
+    .confidence-badge {
+      background: #DEF7EC;
+      color: #03543F;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    /* Severity Meter Card */
+    .severity-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+
+    .card-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-header-flex h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .severity-badge {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 14px;
+      background: #E5E7EB;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 10px;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: var(--bg);
+      padding: 12px;
+      border-radius: 12px;
+    }
+
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Multi-Tab Visualizer */
+    .visualizer-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+
+    .tab-bar {
+      display: flex;
+      background: #F3F4F6;
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .image-display-frame {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .image-display-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .tab-caption {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* Treatment Card */
+    .treatment-card {
+      background: #F0FDF4;
+      border-radius: var(--radius);
+      padding: 20px;
+      border: 1px solid #BBF7D0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .treatment-card h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #166534;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .treatment-card p {
+      font-size: 13px;
+      color: #14532D;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    /* Color classes */
+    .tier-healthy { background: #D1FAE5; color: #065F46; }
+    .tier-mild { background: #FEF3C7; color: #92400E; }
+    .tier-moderate { background: #FFEDD5; color: #9A3412; }
+    .tier-severe { background: #FEE2E2; color: #991B1B; }
+    .tier-very-severe { background: #7F1D1D; color: #FFFFFF; }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Bar -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="brand-title">
+        <div class="brand-icon">🌾</div>
+        <div class="brand-text">
+          <h1>Paddy Doctor AI</h1>
+          <p>EfficientNet-B0 + Grad-CAM++ + SAM</p>
+        </div>
+      </div>
+      <div class="server-status">
+        <div class="status-dot"></div>
+        <span>Online</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Action / Upload Card -->
+    <div class="action-card">
+      <h2>Paddy Leaf Pathology Scan</h2>
+      <p>Capture a diseased leaf or upload an image to quantify canopy lesion severity.</p>
+
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="document.getElementById('cameraInput').click()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Camera
+        </button>
+
+        <button class="btn btn-secondary" onclick="document.getElementById('galleryInput').click()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Gallery
+        </button>
+      </div>
+
+      <!-- Hidden File Inputs -->
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="handleFileSelect(event)">
+      <input type="file" id="galleryInput" accept="image/*" onchange="handleFileSelect(event)">
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingCard" class="loading-state">
+      <div class="spinner"></div>
+      <div id="loadingStatusText" class="loading-text">1/4. Running EfficientNet-B0 Classifier...</div>
+      <div class="loading-subtext">Executing Deep Learning & Foundation Segmentation Pipeline</div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsCard" class="results-container">
+
+      <!-- Diagnosis Card -->
+      <div class="diagnosis-card" id="diagnosisCard">
+        <div class="diagnosis-header">
+          <div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Diagnosed Pathogen</div>
+            <div class="disease-title" id="diseaseTitle">-</div>
+          </div>
+          <span class="confidence-badge" id="confidenceBadge">0.0% Conf.</span>
+        </div>
+      </div>
+
+      <!-- Severity Card -->
+      <div class="severity-card">
+        <div class="card-header-flex">
+          <h3>Canopy Severity Quantification</h3>
+          <span class="severity-badge" id="severityBadge">0.0%</span>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <span class="metric-label">Disease Tier</span>
+            <span class="metric-value" id="severityTierText">-</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Lesion / Canopy Pixels</span>
+            <span class="metric-value" id="pixelStats">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Multi-Tab Visualizer -->
+      <div class="visualizer-card">
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('composite')">🌿 SAM Overlay</button>
+          <button class="tab-btn" onclick="switchTab('gradcam')">🔥 Grad-CAM++</button>
+          <button class="tab-btn" onclick="switchTab('mask')">🎯 Lesion Mask</button>
+          <button class="tab-btn" onclick="switchTab('original')">📷 Original</button>
+        </div>
+
+        <div class="image-display-frame">
+          <img id="mainDisplayImage" src="" alt="Diagnostic View">
+        </div>
+        <p class="tab-caption" id="tabCaption">Green: Healthy/Chlorotic Leaf Canopy | Red: SAM Lesion Segmentation</p>
+      </div>
+
+      <!-- Treatment Card -->
+      <div class="treatment-card">
+        <h3>
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+          Agronomic Treatment Guidance
+        </h3>
+        <p id="treatmentText">-</p>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    let currentVisualizations = {};
+    let originalImageSrc = '';
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        originalImageSrc = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      uploadAndDiagnose(file);
+    }
+
+    async function uploadAndDiagnose(file) {
+      const loadingCard = document.getElementById('loadingCard');
+      const resultsCard = document.getElementById('resultsCard');
+      const statusText = document.getElementById('loadingStatusText');
+
+      loadingCard.style.display = 'block';
+      resultsCard.style.display = 'none';
+
+      const steps = [
+        "1/4. Running EfficientNet-B0 Classifier...",
+        "2/4. Generating Grad-CAM++ Attribution...",
+        "3/4. Segmenting with Prompted SAM...",
+        "4/4. Quantifying Canopy Severity (DIP)..."
+      ];
+      let stepIdx = 0;
+      const interval = setInterval(() => {
+        stepIdx = (stepIdx + 1) % steps.length;
+        statusText.innerText = steps[stepIdx];
+      }, 1200);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          body: formData
+        });
+
+        clearInterval(interval);
+
+        if (!response.ok) {
+          throw new Error("Server error: " + response.statusText);
+        }
+
+        const data = await response.parse ? await response.parse() : await response.json();
+        renderResults(data);
+      } catch (err) {
+        clearInterval(interval);
+        alert("Inference Error: " + err.message);
+      } finally {
+        loadingCard.style.display = 'none';
+      }
+    }
+
+    function renderResults(data) {
+      const pred = data.prediction;
+      const vis = data.visualizations;
+      currentVisualizations = vis;
+
+      // Titles & Badges
+      document.getElementById('diseaseTitle').innerText = pred.display_name;
+      document.getElementById('confidenceBadge').innerText = pred.confidence_percentage + "% Conf.";
+
+      // Severity Gauge
+      const sevPct = pred.severity_percentage;
+      const badge = document.getElementById('severityBadge');
+      const fill = document.getElementById('progressBarFill');
+      const tierText = document.getElementById('severityTierText');
+      const stats = document.getElementById('pixelStats');
+
+      badge.innerText = sevPct + "% Severity";
+      fill.style.width = Math.min(100, Math.max(2, sevPct)) + "%";
+      tierText.innerText = pred.severity_category;
+      stats.innerText = pred.lesion_pixels.toLocaleString() + " / " + pred.leaf_pixels.toLocaleString() + " px";
+
+      // Color coding
+      let color = "#10B981"; // green
+      let tierClass = "tier-healthy";
+      if (sevPct > 50) {
+        color = "#DC2626";
+        tierClass = "tier-very-severe";
+      } else if (sevPct > 25) {
+        color = "#EA580C";
+        tierClass = "tier-severe";
+      } else if (sevPct > 10) {
+        color = "#F59E0B";
+        tierClass = "tier-moderate";
+      } else if (sevPct > 0) {
+        color = "#84CC16";
+        tierClass = "tier-mild";
+      }
+
+      fill.style.backgroundColor = color;
+      badge.className = "severity-badge " + tierClass;
+
+      // Agronomic Treatment
+      document.getElementById('treatmentText').innerText = pred.treatment_recommendation;
+
+      // Switch to default tab
+      switchTab('composite');
+
+      // Display results
+      document.getElementById('resultsCard').style.display = 'flex';
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    }
+
+    function switchTab(tab) {
+      const img = document.getElementById('mainDisplayImage');
+      const caption = document.getElementById('tabCaption');
+      const btns = document.querySelectorAll('.tab-btn');
+      btns.forEach(b => b.classList.remove('active'));
+
+      if (tab === 'composite') {
+        btns[0].classList.add('active');
+        img.src = "data:image/png;base64," + currentVisualizations.composite_overlay_base64;
+        caption.innerText = "🌿 Green: Canopy segmentation | 🔴 Red: Precise SAM lesion delineation";
+      } else if (tab === 'gradcam') {
+        btns[1].classList.add('active');
+        img.src = "data:image/png;base64," + currentVisualizations.gradcam_heatmap_base64;
+        caption.innerText = "🔥 Grad-CAM++ Attention: Warmer regions drove the pathogen diagnosis";
+      } else if (tab === 'mask') {
+        btns[2].classList.add('active');
+        img.src = "data:image/png;base64," + currentVisualizations.lesion_mask_base64;
+        caption.innerText = "🎯 Binary Lesion Mask: Cleaned via mathematical morphology";
+      } else if (tab === 'original') {
+        btns[3].classList.add('active');
+        img.src = originalImageSrc;
+        caption.innerText = "📷 Raw Input Image captured from field camera";
+      }
+    }
+  </script>
+</body>
+</html>
