@@ -4,9 +4,10 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c.svg)](https://pytorch.org/)
 [![Flutter](https://img.shields.io/badge/Flutter-3.24-02569B.svg)](https://flutter.dev/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688.svg)](https://fastapi.tiangolo.com/)
+[![MobileSAM](https://img.shields.io/badge/MobileSAM-39MB-brightgreen.svg)](https://github.com/ChaoningZhang/MobileSAM)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An end-to-end Computer Vision and Mobile Health diagnostic system that combines **EfficientNet-B0**, **Grad-CAM++ Explainable AI (XAI)**, **Meta's Segment Anything Model (SAM)**, and **Dual-Spectrum Digital Image Processing (DIP)** to deliver real-time pathogen classification and precise lesion severity quantification.
+An end-to-end Computer Vision and Mobile Health diagnostic system that combines **EfficientNet-B0**, **Grad-CAM++ Explainable AI (XAI)**, **MobileSAM (Segment Anything Model)**, and **Dual-Spectrum Digital Image Processing (DIP)** to deliver real-time pathogen classification and precise lesion severity quantification.
 
 ---
 
@@ -25,7 +26,8 @@ An end-to-end Computer Vision and Mobile Health diagnostic system that combines 
         • Connected Components & Salient Peak Extraction
                       │
                       ▼
-   [ 3. Foundation Segmentation: Zero-Shot Prompted SAM ]
+   [ 3. Foundation Segmentation: Zero-Shot Prompted MobileSAM ]
+        • 39 MB TinyViT weights | ~1.7s CPU inference
         • Box Prompt + Positive Lesion Point + Negative Background Point
         • Multi-mask alignment selection via activation-weighted score
                       │
@@ -75,28 +77,108 @@ The mobile client ([`flutter_app/`](flutter_app)) includes:
 
 ---
 
-## 🚀 Quick Start Guide
+## 🛠️ How to Run This Project
 
-### 1. Start the FastAPI Backend
+### 📋 Prerequisites
+* **Python 3.10+** (Tested on Python 3.10 – 3.13)
+* **Git** installed on your system
+* *(Optional)* **Flutter SDK 3.24+** (if running the native Flutter app)
+
+---
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/maharabazmi/paddy-disease-detection.git
+cd paddy-disease-detection
+```
+
+---
+
+### 2. Install Python Dependencies
+Install the required machine learning and server packages:
+```bash
+cd paddy_disease_detection
+pip install -r requirements.txt
+```
+> **Note on Model Weights**: Both pre-trained checkpoints are bundled in the repository:
+> * `checkpoints/best_efficientnet_b0.pth` (16 MB - Fine-tuned Classifier)
+> * `checkpoints/mobile_sam.pt` (39 MB - Lightweight MobileSAM)
+
+---
+
+### 3. Run the Backend AI Server
+
+You have two convenient ways to start the server:
+
+#### Option A: 1-Click Launch (Windows)
+Double-click **`start_backend.bat`** in the project root directory.
+
+#### Option B: Manual Command Line
 ```bash
 cd paddy_disease_detection
 python server.py
 ```
-*Server starts on `http://0.0.0.0:8000`.*
+The server will start listening at:
+* **Local Web App**: `http://localhost:8000`
+* **Network IP**: `http://<your-laptop-ip>:8000`
+* **Interactive Swagger API Docs**: `http://localhost:8000/docs`
 
-### 2. Launch the Public Tunnel (For Smartphone Testing)
-```bash
-.\cloudflared.exe tunnel --url http://127.0.0.1:8000
-```
-*Gives you an instant public HTTPS link (`https://xxxx.trycloudflare.com`) accessible from any smartphone.*
+---
 
-### 3. Run the Flutter Mobile App
+### 4. Access the Application on Your Smartphone
+
+#### Method 1: Local Wi-Fi / Hotspot (Instant)
+1. Ensure your smartphone and laptop are connected to the **same Wi-Fi router** or **mobile hotspot**.
+2. Find your laptop's local IP (run `ipconfig` in PowerShell, e.g., `192.168.0.100`).
+3. Open Chrome or Safari on your phone and go to:
+   ```
+   http://<your-laptop-ip>:8000
+   ```
+4. The mobile web application will load immediately with direct camera support!
+
+#### Method 2: Global Public HTTPS Tunnel (Cloudflare)
+If you want to access the app over **4G/5G mobile data** or present in a classroom with client-isolated Wi-Fi:
+1. Double-click **`start_public_tunnel.bat`** *(or run `.\cloudflared.exe tunnel --url http://127.0.0.1:8000`)*.
+2. Cloudflare will print a live public HTTPS link:
+   ```text
+   https://xxxx-xxxx-xxxx.trycloudflare.com
+   ```
+3. Open this link on **any phone anywhere in the world**!
+
+---
+
+### 5. Running the Flutter Mobile Client (Optional)
+
+If you wish to run the cross-platform Flutter application:
+
+#### In Browser (Chrome / Edge):
 ```bash
 cd flutter_app
 flutter pub get
-flutter run -d chrome     # Run in Chrome/Edge
-# OR: flutter run          # Run on connected Android smartphone
+flutter run -d chrome
 ```
+
+#### On Physical Android Smartphone:
+1. Connect your Android device via USB cable and enable **USB Debugging** in Developer Options.
+2. Verify device is detected:
+   ```bash
+   flutter devices
+   ```
+3. Build and launch:
+   ```bash
+   flutter run
+   ```
+4. In the app, tap the **Settings icon (`⚙️`)** in the top right to configure your laptop IP or Cloudflare tunnel URL!
+
+---
+
+### 6. Running with Docker Compose (Optional)
+
+To spin up the containerized microservice:
+```bash
+docker compose up --build
+```
+The container exposes port `8000` automatically.
 
 ---
 
@@ -110,7 +192,8 @@ flutter run -d chrome     # Run in Chrome/Edge
 │   ├── Dockerfile                       # Production Container Definition
 │   ├── requirements.txt                 # Backend Python Dependencies
 │   └── checkpoints/
-│       └── best_efficientnet_b0.pth     # Trained Classifier Checkpoint
+│       ├── best_efficientnet_b0.pth     # Trained Classifier Checkpoint (16 MB)
+│       └── mobile_sam.pt                # MobileSAM TinyViT Checkpoint (39 MB)
 ├── flutter_app/
 │   ├── lib/main.dart                    # Complete Flutter Material 3 Code
 │   ├── pubspec.yaml                     # Flutter Dependencies
