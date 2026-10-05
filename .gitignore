@@ -18,6 +18,7 @@ paddy_disease_detection/data/
 *.pth
 *.pt
 !paddy_disease_detection/checkpoints/best_efficientnet_b0.pth
+!paddy_disease_detection/checkpoints/mobile_sam.pt
 
 # Binaries & Tunnels
 cloudflared.exe
